@@ -71,7 +71,7 @@ let
         ) snabbs
       ) subQemus;
 
-  csv = locaLib.mkBenchmarkCSV (builtins.attrValues benchmarks-list) "benchmark,mode,duration,snabb,conf,id,link,sequence,score,qemu,unit";
+  csv = locaLib.mkBenchmarkCSV (builtins.attrValues benchmarks-list) "benchmark,mode,duration,snabb,conf,qemu,id,link,sequence,score,unit";
 in {
   # All versions of software used in benchmarks
   software = locaLib.listDrvToAttrs (snabbs ++ subQemus);
