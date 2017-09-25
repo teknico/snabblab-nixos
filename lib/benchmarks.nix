@@ -228,9 +228,67 @@ in rec {
         nic = ''
           cd src
 
+          # Generate the binding table using 15874 IPv4 public addresses.
+          # 6: size of psid-length. 2^6: 64 softwires of 1024 port-size each.
+          /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr generate-binding-table \
+            --output binding-table.conf 193.5.1.100 15874 fc00::100 fc00:1:2:3:4:5:0:7e 6
+          echo "softwire-config {" > preamble.conf
+          echo "
+}
+external-interface {
+   allow-incoming-icmp false;
+   error-rate-limiting {
+      packets 600000;
+   }
+   reassembly {
+      max-fragments-per-packet 40;
+   }
+}
+internal-interface {
+   allow-incoming-icmp false;
+   error-rate-limiting {
+      packets 600000;
+   }
+   reassembly {
+      max-fragments-per-packet 40;
+   }
+}
+instance {
+   device test;
+   queue {
+      id 1;
+      external-interface {
+         ip 10.0.1.1;
+         mac 02:aa:aa:aa:aa:aa;
+         next-hop {
+            mac 02:99:99:99:99:99;
+         }
+      }
+      internal-interface {
+         ip fc00::100;
+         mac 02:aa:aa:aa:aa:aa;
+         next-hop {
+            mac 02:99:99:99:99:99;
+         }
+      }
+   }
+}" > postamble.conf
+          cat preamble.conf binding-table.conf postamble.conf > test.conf
+
+          # Generate the data files
+          # Generate 63 packets, each matches a different softwire:
+          /var/setuid-wrappers/sudo ${snabb}/bin/snabb packetblaster lwaftr \
+            --src_mac 02:99:99:99:99:99 --dst_mac 02:aa:aa:aa:aa:aa \
+            --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 63 \
+            --pcap lwaftr-traffic.pcap --size 550
+          # Filter out IPv4 packets to from-inet-test.pcap:
+          tcpdump "ip" -r lwaftr-traffic.pcap -w from-inet-test.pcap
+          Filter out IPv6 packets to from-b4-test.pcap:
+          tcpdump "ip6" -r lwaftr-traffic.pcap -w from-b4-test.pcap
+
           # Start the application
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr run --cpu=1 \
-            --conf program/lwaftr/tests/data/${conf} \
+            --conf test.conf \
             --v4 0000:$SNABB_PCI0_1 \
             --v6 0000:$SNABB_PCI1_1 \
             2>&1 | tee $out/log.txt&
@@ -239,8 +297,8 @@ in rec {
           # Generate traffic
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr loadtest --cpu=7 \
             --step ${loadTestStep} --hydra --bench-file $out/log.csv \
-            program/lwaftr/tests/benchdata/${ipv4PCap} IPv4 IPv6 0000:$SNABB_PCI0_0 \
-            program/lwaftr/tests/benchdata/${ipv6PCap} IPv6 IPv4 0000:$SNABB_PCI1_0 | tee $out/loadtest.log
+            from-inet-test.pcap IPv4 IPv6 0000:$SNABB_PCI0_0 \
+            from-b4-test.pcap IPv6 IPv4 0000:$SNABB_PCI1_0 | tee $out/loadtest.log
         '';
         # Two processes, each on their own NUMA node, talking via one NIC card
         nic_on_a_stick = ''
