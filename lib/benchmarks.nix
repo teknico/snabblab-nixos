@@ -233,7 +233,7 @@ in rec {
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr generate-binding-table \
             --output binding-table.conf 193.5.1.100 15874 fc00::100 fc00:1:2:3:4:5:0:7e 6
           echo "softwire-config {" > preamble.conf
-          echo "
+          echo "\
 }
 external-interface {
    allow-incoming-icmp false;
@@ -256,7 +256,7 @@ internal-interface {
 instance {
    device test;
    queue {
-      id 1;
+      id 0;
       external-interface {
          ip 10.0.1.1;
          mac 02:aa:aa:aa:aa:aa;
@@ -276,10 +276,11 @@ instance {
           cat preamble.conf binding-table.conf postamble.conf > test.conf
 
           # Generate the data files
+
           # Generate 63 packets, each matches a different softwire:
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb packetblaster lwaftr \
             --src_mac 02:99:99:99:99:99 --dst_mac 02:aa:aa:aa:aa:aa \
-            --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 63 \
+            --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 2e4 \
             --pcap lwaftr-traffic.pcap --size 550
           # Filter out IPv4 packets to from-inet-test.pcap:
           tcpdump "ip" -r lwaftr-traffic.pcap -w from-inet-test.pcap
