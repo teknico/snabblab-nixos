@@ -273,7 +273,7 @@ instance {
       }
    }
 }" > postamble.conf
-          cat preamble.conf binding-table.conf postamble.conf > test.conf
+          cat preamble.conf binding-table.conf postamble.conf > ${conf}
 
           # Generate the data files
 
@@ -283,13 +283,13 @@ instance {
             --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 2e4 \
             --pcap lwaftr-traffic.pcap --size 550
           # Filter out IPv4 packets to from-inet-test.pcap:
-          tcpdump "ip" -r lwaftr-traffic.pcap -w from-inet-test.pcap
+          tcpdump "ip" -r lwaftr-traffic.pcap -w ${ipv4PCap}
           Filter out IPv6 packets to from-b4-test.pcap:
-          tcpdump "ip6" -r lwaftr-traffic.pcap -w from-b4-test.pcap
+          tcpdump "ip6" -r lwaftr-traffic.pcap -w ${ipv6PCap}
 
           # Start the application
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr run --cpu=1 \
-            --conf test.conf \
+            --conf ${conf} \
             --v4 0000:$SNABB_PCI0_1 \
             --v6 0000:$SNABB_PCI1_1 \
             2>&1 | tee $out/log.txt&
@@ -298,8 +298,8 @@ instance {
           # Generate traffic
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr loadtest --cpu=7 \
             --step ${loadTestStep} --hydra --bench-file $out/log.csv \
-            from-inet-test.pcap IPv4 IPv6 0000:$SNABB_PCI0_0 \
-            from-b4-test.pcap IPv6 IPv4 0000:$SNABB_PCI1_0 | tee $out/loadtest.log
+            ${ipv4PCap} IPv4 IPv6 0000:$SNABB_PCI0_0 \
+            ${ipv6PCap} IPv6 IPv4 0000:$SNABB_PCI1_0 | tee $out/loadtest.log
         '';
         # Two processes, each on their own NUMA node, talking via one NIC card
         nic_on_a_stick = ''
