@@ -277,15 +277,16 @@ instance {
 
           # Generate the data files
 
-          # Generate 63 packets, each matches a different softwire:
+          # Generate 20K IPv4 packets, each matching a different softwire
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb packetblaster lwaftr \
             --src_mac 02:99:99:99:99:99 --dst_mac 02:aa:aa:aa:aa:aa \
             --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 2e4 \
-            --pcap lwaftr-traffic.pcap --size 550
-          # Filter out IPv4 packets to from-inet-test.pcap:
-          tcpdump "ip" -r lwaftr-traffic.pcap -w ${ipv4PCap}
-          Filter out IPv6 packets to from-b4-test.pcap:
-          tcpdump "ip6" -r lwaftr-traffic.pcap -w ${ipv6PCap}
+            --pcap ${ipv4PCap} --size 550 -4
+          # Then generate 20K IPv6 packets
+          /var/setuid-wrappers/sudo ${snabb}/bin/snabb packetblaster lwaftr \
+            --src_mac 02:99:99:99:99:99 --dst_mac 02:aa:aa:aa:aa:aa \
+            --b4 fc00:1:2:3:4:5:0:7e,193.5.1.100,1024 --aftr fc00::100 --count 2e4 \
+            --pcap ${ipv6PCap} --size 550 -6
 
           # Start the application
           /var/setuid-wrappers/sudo ${snabb}/bin/snabb lwaftr run --cpu=1 \
