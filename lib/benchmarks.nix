@@ -234,44 +234,44 @@ in rec {
             --output binding-table.conf 193.5.1.100 15874 fc00::100 fc00:1:2:3:4:5:0:7e 6
           echo "softwire-config {" > preamble.conf
           echo "\
-}
-external-interface {
-   allow-incoming-icmp false;
-   error-rate-limiting {
+  external-interface {
+    allow-incoming-icmp false;
+    error-rate-limiting {
       packets 600000;
-   }
-   reassembly {
+    }
+    reassembly {
       max-fragments-per-packet 40;
-   }
-}
-internal-interface {
-   allow-incoming-icmp false;
-   error-rate-limiting {
+    }
+  }
+  internal-interface {
+    allow-incoming-icmp false;
+    error-rate-limiting {
       packets 600000;
-   }
-   reassembly {
+    }
+    reassembly {
       max-fragments-per-packet 40;
-   }
-}
-instance {
-   device test;
-   queue {
+    }
+  }
+  instance {
+    device test;
+    queue {
       id 0;
       external-interface {
-         ip 10.0.1.1;
-         mac 02:aa:aa:aa:aa:aa;
-         next-hop {
-            mac 02:99:99:99:99:99;
-         }
+        ip 10.0.1.1;
+        mac 02:aa:aa:aa:aa:aa;
+        next-hop {
+          mac 02:99:99:99:99:99;
+        }
       }
       internal-interface {
-         ip fc00::100;
-         mac 02:aa:aa:aa:aa:aa;
-         next-hop {
-            mac 02:99:99:99:99:99;
-         }
+        ip fc00::100;
+        mac 02:aa:aa:aa:aa:aa;
+        next-hop {
+          mac 02:99:99:99:99:99;
+        }
       }
-   }
+    }
+  }
 }" > postamble.conf
           cat preamble.conf binding-table.conf postamble.conf > ${conf}
 
